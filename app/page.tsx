@@ -1,0 +1,3 @@
+import CloudGate from './cloud-gate';
+export const dynamic = 'force-dynamic';
+export default function Page() { return <CloudGate />; }
