@@ -7,7 +7,6 @@ export async function GET(req: Request) {
   try {
     const siteId = await siteIdentity(), session = await cloudSession(req); cookies = session.cookies;
     const { state, user } = await rpc(session, 'dolgi_read');
-    if (!user.pin_hash && session.activeUntil <= Date.now()) throw new CloudError('Сеанс завершён. Войдите снова', 401);
     const legacy = await legacyInfo(siteId, session, user, state);
     return reply({ user: { id: session.id, email: session.email }, legacy }, 200, cookies);
   } catch (e) {

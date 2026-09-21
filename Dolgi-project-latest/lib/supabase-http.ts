@@ -59,7 +59,7 @@ export async function emailSignIn(email: string, password: string, signup: boole
   return { confirmation: false, cookies: await tokenCookies(data) };
 }
 // Extend the existing HTTP Auth client: OAuth uses the same verified session,
-// HttpOnly cookies, refresh, idle timeout and RLS-backed data requests as email.
+// HttpOnly cookies, automatic refresh and RLS-backed data requests as email.
 export const githubVerifierCookie = (value = '') => `dolgi_github_verifier=${value}; Path=/api/auth/github; HttpOnly; SameSite=Lax; Max-Age=${value ? 600 : 0}${secure()}`;
 export function githubPrepare(storedVerifier: unknown) {
   // Supabase's storage adapter receives a JSON-encoded verifier. Preserve it

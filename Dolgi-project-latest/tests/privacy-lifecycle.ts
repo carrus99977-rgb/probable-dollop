@@ -32,4 +32,17 @@ clock+=IDLE_MS;win.emit('pageshow');assert.equal(expires,2,'sleep/bfcache wall-c
 stop();clock+=IDLE_MS;tick();assert.equal(expires,2);
 assert.ok([...doc.listeners.values()].every(s=>s.size===0));
 assert.ok([...win.listeners.values()].every(s=>s.size===0));
+// A remembered login never expires just because the phone was idle or asleep.
+let pinEnabled=false, persistentExpires=0;
+const stopPersistent=installPrivacyLifecycle({window:win as any,document:doc as any,now:()=>clock,
+  shouldExpire:()=>pinEnabled,expire:()=>{persistentExpires++;},suspend:()=>{},activity:()=>{},resume:async()=>{},
+});
+clock+=7*86400000;tick();assert.equal(persistentExpires,0);
+doc.hidden=true;doc.emit('visibilitychange');
+assert.equal(doc.documentElement.dataset.privateHidden,'true');
+doc.hidden=false;win.emit('pageshow');await Promise.resolve();
+assert.equal(doc.documentElement.dataset.privateHidden,undefined);
+assert.equal(persistentExpires,0);
+pinEnabled=true;tick();assert.equal(persistentExpires,1,'PIN still locks after idle');
+stopPersistent();
 console.log('PASS: trusted activity, idle expiry, synchronous whole-document mask, stale resume race, background/bfcache, cleanup');

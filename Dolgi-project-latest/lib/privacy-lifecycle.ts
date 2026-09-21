@@ -4,7 +4,7 @@ export const IDLE_MS = 15 * 60 * 1000;
 export function installPrivacyLifecycle(options: {
   window: Window; document: Document; now?: () => number;
   expire: () => void; suspend: () => void; resume: () => Promise<void>;
-  activity: () => void;
+  activity: () => void; shouldExpire?: () => boolean;
 }) {
   const { window: win, document: doc } = options;
   const now = options.now || Date.now;
@@ -12,7 +12,7 @@ export function installPrivacyLifecycle(options: {
   let suspended = doc.hidden;
   const mask = () => { doc.documentElement.dataset.privateHidden = 'true'; };
   const expire = () => { if (expired) return; expired = true; options.expire(); };
-  const check = () => { if (now() - last >= IDLE_MS) expire(); };
+  const check = () => { if ((options.shouldExpire?.() ?? true) && now() - last >= IDLE_MS) expire(); };
   const activity = (event: Event) => {
     if (!event.isTrusted || doc.hidden || suspended) return;
     check();

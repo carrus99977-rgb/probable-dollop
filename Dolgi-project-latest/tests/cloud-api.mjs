@@ -50,7 +50,8 @@ try {
   assert.deepEqual(accounts.get('bob'), bobBeforeDeletion);
   assert.equal((await api.POST(request({ type: 'deleteDebt', id: 'd1', revision: 2 }))).status, 409);
   assert.ok(accounts.get('alice').state.debts.some(d => d.id === 'd1'));
-  activeUntil = Date.now() - 1; r = await api.GET(get()); assert.equal(r.status, 401); assert.equal((await r.json()).state, undefined);
+  activeUntil = Date.now() - 7 * 86400000; r = await api.GET(get()); assert.equal(r.status, 200); assert.ok((await r.json()).state);
+  r = await api.POST(request({type:'note',personId:'p0',text:'After a week away',revision:3})); assert.equal(r.status,200);
   activeUntil = Date.now() + 900000;
   r = await api.POST(request({ type: 'pin', pin: '471829' })); assert.equal(r.status, 200); const aliceCookie = r.headers.get('set-cookie'); assert.match(aliceCookie, /HttpOnly/); assert.match(aliceCookie, /Secure/);
   assert.equal((await api.GET(get())).status, 423); assert.equal((await api.GET(get(aliceCookie))).status, 200);
@@ -63,5 +64,5 @@ try {
   Date.now = () => start + 16 * 60000;
   assert.equal((await api.GET(get(bobCookie))).status, 423); assert.equal((await api.GET(get(renewed))).status, 200);
   assert.equal((await api.POST(request({ type: 'clear', revision: 1 }, bobCookie))).status, 423);
-  console.log('PASS: cloud API authentication, server idle expiry, owner spoof rejection, revision conflict, PIN protection/rate limit, account-bound lock, expiry and renewal');
+  console.log('PASS: cloud API authentication, persistent login after inactivity, owner spoof rejection, revision conflict, PIN protection/rate limit, account-bound lock, expiry and renewal');
 } finally { Date.now = oldNow; process.env.NODE_ENV = oldEnv; }

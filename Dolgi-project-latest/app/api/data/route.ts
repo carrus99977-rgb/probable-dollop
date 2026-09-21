@@ -8,7 +8,6 @@ export async function GET(req: Request) {
   try {
     await siteIdentity(); const session = await cloudSession(req); cookies = session.cookies;
     const { state, user } = await rpc(session, 'dolgi_read');
-    if (!user.pin_hash && session.activeUntil <= Date.now()) throw new CloudError('Сеанс завершён. Войдите снова', 401);
     if (await pinLocked(req, user)) return reply({ locked: true, pinEnabled: true }, 423, cookies);
     validate(state);
     return reply({ state, revision: user.revision, pinEnabled: !!user.pin_hash, accountId: session.id }, 200, cookies);
@@ -23,7 +22,6 @@ export async function POST(req: Request) {
     const a = JSON.parse(raw);
     if (a.type === 'lock') return reply({ locked: true }, 200, [...cookies, clearAuthCookies()[2]]);
     const { state, user } = await rpc(session, 'dolgi_read'); validate(state);
-    if (!user.pin_hash && session.activeUntil <= Date.now()) throw new CloudError('Сеанс завершён. Войдите снова', 401);
     const response = (s = state, revision = user.revision, pinEnabled = !!user.pin_hash) => ({ state: s, revision, pinEnabled, accountId: session.id });
     const renew = async (u = user) => { const c = await pinCookie(u); if (c) cookies.push(c); cookies.push(await renewActivity(session)); };
     if (a.type === 'unlock') {
